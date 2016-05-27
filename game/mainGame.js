@@ -1,26 +1,4 @@
-var player;
-
 var MainGame = function () {};
-MainGame.prototype = {
-    create: function () {
-		var backdrop = game.add.sprite(0, 0, 'scene_backdrop');
-		player = new Player(0, 0);
-    },
-    
-    update: function () {
-		player.update(game.time.elapsed);
-    }
-};
-
-class Laser {
-	constructor(posX, posY) {
-		this.sprite = game.add.sprite(posX, posY, 'player_laser');
-		this.fire();
-	}
-	fire() {
-		this.sprite.y -= 100;
-	}
-}
 class Player {
 	constructor(posX, posY) {
 		this.hp = 100;
@@ -39,7 +17,7 @@ class Player {
 		
 		var speed = 0.25 * deltaTime;
 		
-		// if-elif here so they cant use A and D at same time
+		// if-elif here so they cant use A and D simultaneously
 		if (game.input.keyboard.isDown(Phaser.Keyboard.A)) {
 			this.sprite.x -= speed;
 		} else if (game.input.keyboard.isDown(Phaser.Keyboard.D)) {
@@ -47,8 +25,7 @@ class Player {
 		}
 	}
 	fire(deltaTime)  {
-		var s = new Laser(this.sprite.x, this.sprite.y);
-		
+		console.log("Fire!");
 	}
 	damage(amount) {
 		this.hp -= amount;
@@ -57,3 +34,15 @@ class Player {
 		// Game over
 	}
 }
+var player;
+var handler;
+MainGame.prototype = {
+    create: function () {
+		var backdrop = game.add.sprite(0, 0, 'scene_backdrop');
+		player = new Player(0, 0);
+    },
+    
+    update: function () {
+		player.update(game.time.elapsed);
+    }
+};

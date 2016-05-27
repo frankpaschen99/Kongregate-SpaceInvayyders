@@ -15,9 +15,11 @@ LoadGame.prototype = {
     
 	// Load various image, atlas resources 
     loadImages: function () {
+		game.load.image('scene_backdrop', 'js/game/assets/ui/space_background.png');
 		game.load.image('player_sprite', 'js/game/assets/actors/player_ship.png');
 		game.load.image('player_laser', 'js/game/assets/entities/laser.png');
-		game.load.image('scene_backdrop', 'js/game/assets/ui/space_background.png');
+		game.load.image('ufo', 'js/game/assets/actors/alien_ufo.png');
+		game.load.image('ayy', 'js/game/assets/actors/alien_ayy.png');
     },
     
     loadFonts: function () {
