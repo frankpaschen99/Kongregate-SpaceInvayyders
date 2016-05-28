@@ -1,8 +1,11 @@
+// todo: asteroids, upgrades, health bars, meme bar,
+
 var mobCount = 0;
 var grossMobCount = 0;
 var score = 0;
-var level = 1;
-
+var level = 0;
+var memePoints = 0;
+var memePointsNeeded = 100;	// 100 for first upgrade
 var MainGame = function () {};
 class Player {
 	constructor(posX, posY) {
@@ -14,6 +17,8 @@ class Player {
 		this.space.onDown.add(v => {
 			this.fire();
 		}, this);
+		this.damageToGive = 20;	// increased with upgrades
+		this.upgradeLevel = 1;
 	}
 	update(deltaTime) {
 		// window borders for sprite
@@ -28,9 +33,11 @@ class Player {
 		} else if (game.input.keyboard.isDown(Phaser.Keyboard.D)) {
 			this.sprite.x += speed;
 		}
+		if (memePoints >= memePointsNeeded) {
+			this.upgrade();
+		}
 	}
 	fire(deltaTime)  {
-		console.log("Fire!");
 		bh.addPlayerBullet(new PlayerBullet(this.sprite.x, this.sprite.y));
 	}
 	damage(amount) {
@@ -40,11 +47,22 @@ class Player {
 	}
 	die() {
 		// Game over
+		game.sound.play('sad', 0.06, true);
 		console.log("Game over!");
 		this.sprite.destroy();
 	}
 	getSprite() {
 		return this.sprite;
+	}
+	getDamage() {
+		return this.damageToGive;
+	}
+	upgrade() {
+		this.upgradeLevel++;
+		memePointsNeeded *= 5;
+	}
+	getUpgradeLevel() {
+		return this.upgradeLevel;
 	}
 }
 class LevelCreator {
@@ -58,7 +76,7 @@ class LevelCreator {
 	}
 	spawnMobs() {	// called after a level is completed
 		if (!this.firstSpawn) level++;
-		var numToSpawn = Math.floor(Math.random() * 2) + Math.ceil((score / 5)) + 1;
+		var numToSpawn = Math.floor(Math.random() * 2) + Math.ceil((score / 5)) + level;
 		var variation;
 		if (score > 5) {
 			if (Math.floor(Math.random() * 3) == 1) variation = 'ayy';
@@ -66,9 +84,9 @@ class LevelCreator {
 		} else {
 			variation = 'ayy';
 		}
-		for (var i = 0; i < numToSpawn / 2; i++) this.mobs.push(new Enemy(Math.floor(Math.random() * 537), Math.floor(Math.random() * 200), 100, variation, grossMobCount));
+		for (var i = 0; i < numToSpawn / 2; i++) this.mobs.push(new Enemy(Math.floor(Math.random() * 537), Math.floor(Math.random() * 200), 100, variation, grossMobCount, Math.random() * (2 - 0.25) + 0.25));
 		var opposite = variation == 'ayy' ? 'ufo' : 'ayy';
-		for (var i = numToSpawn / 2; i < numToSpawn; i++) this.mobs.push(new Enemy(Math.floor(Math.random() * 537), Math.floor(Math.random() * 200), 100, opposite, grossMobCount));
+		for (var i = numToSpawn / 2; i < numToSpawn; i++) this.mobs.push(new Enemy(Math.floor(Math.random() * 537), Math.floor(Math.random() * 200), 100, opposite, grossMobCount, Math.random() * (2 - 0.25) + 0.25));
 		this.firstSpawn = false;
 	}
 	update(deltaTime) {
@@ -76,7 +94,7 @@ class LevelCreator {
 			level++;
 			this.spawnMobs();
 		}
-		if (game.time.now - this.lastTime > Math.floor(Math.random() * 50000 || this.lastTime == 0)) {
+		if (game.time.now - this.lastTime > Math.floor(Math.random() * 10000 || this.lastTime == 0)) {
 			if (this.mobs.length > 0) this.mobs[Math.floor(Math.random() * (this.mobs.length))].shoot();
 			this.lastTime = game.time.now;
 		}
@@ -99,18 +117,20 @@ class LevelCreator {
 }
 // EnemyBullet and PlayerBullet will both be added to the BulletHandler 
 class EnemyBullet {
-	constructor(posX, posY) { 
+	constructor(posX, posY, scale) { 
 		this.sprite = game.add.sprite(posX, posY, 'enemy_meme');
 		this.sprite.lifespan = 10000; // 5 seconds then remove it
+		this.sprite.scale.setTo(scale, scale);
 	}
 	update(deltaTime) {
 		this.sprite.y += 0.5*deltaTime;
+		this.sprite.tint = Math.random() * 0xffffff;
 	}
 	
 }
 class PlayerBullet {
 	constructor(posX, posY) {
-		this.sprite = game.add.sprite(posX, posY, 'player_laser');
+		this.sprite = game.add.sprite(posX+31, posY, 'player_laser');
 		this.sprite.lifespan = 15000;
 	}
 	update(deltaTime) {
@@ -139,7 +159,7 @@ class BulletHandler {
 				if (Phaser.Rectangle.intersects(this.playerBullets[i].sprite.getBounds(), lc.returnMobsArray()[j].sprite.getBounds())) {
 					this.playerBullets[i].destroy();
 					this.removeFromPlayerBullets(this.playerBullets[i]);
-					lc.returnMobsArray()[j].damage(20, lc.returnMobsArray()[j]);
+					lc.returnMobsArray()[j].damage(player.getDamage(), lc.returnMobsArray()[j]);
 				}
 			}
 		}
@@ -174,13 +194,15 @@ class BulletHandler {
 	}
 }
 class Enemy {
-	constructor(posX, posY, hp, variation, id) {
-		this.hp = hp;
+	constructor(posX, posY, hp, variation, id, scale) {
+		this.hp = (hp * scale) / 0.75;
 		this.variation = variation;
 		this.sprite = game.add.sprite(posX, posY, variation);	// x, y, 'ufo' or 'ayy'
 		this.sprite.tint = Math.random() * 0xffffff;
+		this.sprite.scale.setTo(scale, scale);
 		this.movingLeft = false;
 		this.id = id;
+		this.scale = scale;
 		mobCount++;
 		grossMobCount++;
 	}
@@ -191,7 +213,7 @@ class Enemy {
 	}
 	shoot() {
 		// console.log("Enemy [id " + this.id + "] fired.");
-		bh.addEnemyBullet(new EnemyBullet(this.sprite.x, this.sprite.y));
+		bh.addEnemyBullet(new EnemyBullet(this.sprite.x + this.sprite.getBounds().width / 2, this.sprite.y, this.scale));
 	}
 	damage(hp, obj) {
 		game.sound.play('hitmarker', 0.1, false);
@@ -204,6 +226,7 @@ class Enemy {
 		lc.removeFromArray(obj);
 		mobCount--;
 		score++;
+		memePoints += 33.4;
 		lc.drawScore();
 	}
 }

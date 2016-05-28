@@ -22,6 +22,9 @@ LoadGame.prototype = {
 		game.load.image('enemy_meme', 'js/game/assets/entities/dankmeme.png');
 		game.load.image('ufo', 'js/game/assets/actors/alien_ufo.png');
 		game.load.image('ayy', 'js/game/assets/actors/alien_ayy.png');
+		game.load.image('upgrade1', 'js/game/assets/upgrade_icons/missilesLevel1.png');
+		game.load.image('upgrade2', 'js/game/assets/upgrade_icons/missilesLevel2.png');
+		game.load.image('upgrade3', 'js/game/assets/upgrade_icons/missilesLevel3.png');
     },
     
     loadFonts: function () {
@@ -48,7 +51,7 @@ LoadGame.prototype = {
     
 	// Start playing music
     addGameMusic: function () {
-        
+        game.load.audio('sad', 'js/game/assets/music/sadviolin.mp3', true);
     },
 	// Finally, create is called  
     create: function () {
