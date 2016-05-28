@@ -239,11 +239,10 @@ class Enemy {
 }
 class Asteroid {
 	constructor(posX) {
-		this.sprite = game.add.sprite(posX, 0, 'asteroid');
-		this.sprite.z = -50;
+		// this.sprite = game.add.sprite(posX, 0, 'asteroid');
 	}
 	update(deltaTime) {
-		this.sprite.y += 0.2*deltaTime;
+		// this.sprite.y += 0.2*deltaTime;
 	}
 }
 var player;
