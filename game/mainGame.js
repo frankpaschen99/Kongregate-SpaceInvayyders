@@ -68,8 +68,10 @@ class Player {
 class LevelCreator {
 	constructor() {
 		this.mobs = [];
+		this.asteroids = [];
 		this.spawnMobs();	// start level 1;
 		this.lastTime = 0;
+		this.lastTimeAsteroids = 0;
 		this.firstSpawn = true;
 		this.style = { font: "32px Arial", fill: "#00FF00", wordWrap: true, wordWrapWidth: 0, align: "center", backgroundColor: "" };
 		this.text = game.add.text(250, 25, "Bitcoins: " + score, this.style);
@@ -98,8 +100,13 @@ class LevelCreator {
 			if (this.mobs.length > 0) this.mobs[Math.floor(Math.random() * (this.mobs.length))].shoot();
 			this.lastTime = game.time.now;
 		}
+		if (game.time.now - this.lastTimeAsteroids > 2500 || this.lastTimeAsteroids == 0) {
+			this.asteroids.push(new Asteroid(Math.floor(Math.random() * 537)));
+			this.lastTimeAsteroids = game.time.now;
+		}
 		
 		for (var i = 0; i < this.mobs.length; i++) this.mobs[i].update(deltaTime);
+		for (var i = 0; i < this.asteroids.length; i++) this.asteroids[i].update(deltaTime);
 	}
 	returnMobsArray() {
 		return this.mobs;
@@ -230,15 +237,25 @@ class Enemy {
 		lc.drawScore();
 	}
 }
+class Asteroid {
+	constructor(posX) {
+		this.sprite = game.add.sprite(posX, 0, 'asteroid');
+		this.sprite.z = -50;
+	}
+	update(deltaTime) {
+		this.sprite.y += 0.2*deltaTime;
+	}
+}
 var player;
 var lc;
 var bh;
 MainGame.prototype = {
     create: function () {
 		var backdrop = game.add.sprite(0, 0, 'scene_backdrop');
-		player = new Player(0, 0);
 		lc = new LevelCreator();
+		player = new Player(0, 0);
 		bh = new BulletHandler();
+		this.lastTime = 0;
     },
     update: function () {
 		player.update(game.time.elapsed);

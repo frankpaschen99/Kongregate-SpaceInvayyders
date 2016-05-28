@@ -1,4 +1,4 @@
-var game = new Phaser.Game(windowSize.width, windowSize.height, Phaser.AUTO, ''), Main = function () {};
+var game = new Phaser.Game(windowSize.width, windowSize.height, Phaser.AUTO, 'body'), Main = function () {};
 
 Main.prototype = {
 
