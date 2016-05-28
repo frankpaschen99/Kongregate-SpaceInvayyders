@@ -1,3 +1,7 @@
+/* I'd like to preface this file by saying I DO NOT KNOW JAVASCRIPT and I lack even a basic understanding of
+prototype-oriented languages. Thank fuck for this new ES6 syntax or I'd be screwed. So if you're some random
+person looking at this cancer, please don't judge me. */
+
 // todo: asteroids, upgrades, health bars, meme bar,
 
 var mobCount = 0;
