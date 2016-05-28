@@ -1,3 +1,8 @@
+var mobCount = 0;
+var grossMobCount = 0;
+var score = 0;
+var level = 1;
+
 var MainGame = function () {};
 class Player {
 	constructor(posX, posY) {
@@ -26,23 +31,195 @@ class Player {
 	}
 	fire(deltaTime)  {
 		console.log("Fire!");
+		bh.addPlayerBullet(new PlayerBullet(this.sprite.x, this.sprite.y));
 	}
 	damage(amount) {
+		game.sound.play('hitmarker', 0.1, false);
 		this.hp -= amount;
+		if (this.hp <= 0) this.die();
 	}
 	die() {
 		// Game over
+		console.log("Game over!");
+		this.sprite.destroy();
+	}
+	getSprite() {
+		return this.sprite;
+	}
+}
+class LevelCreator {
+	constructor() {
+		this.mobs = [];
+		this.spawnMobs();	// start level 1;
+		this.lastTime = 0;
+		this.firstSpawn = true;
+		this.style = { font: "32px Arial", fill: "#00FF00", wordWrap: true, wordWrapWidth: 0, align: "center", backgroundColor: "" };
+		this.text = game.add.text(250, 25, "Bitcoins: " + score, this.style);
+	}
+	spawnMobs() {	// called after a level is completed
+		if (!this.firstSpawn) level++;
+		var numToSpawn = Math.floor(Math.random() * 2) + Math.ceil((score / 5)) + 1;
+		var variation;
+		if (score > 5) {
+			if (Math.floor(Math.random() * 3) == 1) variation = 'ayy';
+			else variation = 'ufo';
+		} else {
+			variation = 'ayy';
+		}
+		for (var i = 0; i < numToSpawn / 2; i++) this.mobs.push(new Enemy(Math.floor(Math.random() * 537), Math.floor(Math.random() * 200), 100, variation, grossMobCount));
+		var opposite = variation == 'ayy' ? 'ufo' : 'ayy';
+		for (var i = numToSpawn / 2; i < numToSpawn; i++) this.mobs.push(new Enemy(Math.floor(Math.random() * 537), Math.floor(Math.random() * 200), 100, opposite, grossMobCount));
+		this.firstSpawn = false;
+	}
+	update(deltaTime) {
+		if (mobCount == 0) {
+			level++;
+			this.spawnMobs();
+		}
+		if (game.time.now - this.lastTime > Math.floor(Math.random() * 50000 || this.lastTime == 0)) {
+			if (this.mobs.length > 0) this.mobs[Math.floor(Math.random() * (this.mobs.length))].shoot();
+			this.lastTime = game.time.now;
+		}
+		
+		for (var i = 0; i < this.mobs.length; i++) this.mobs[i].update(deltaTime);
+	}
+	returnMobsArray() {
+		return this.mobs;
+	}
+	drawScore() {
+		
+		this.text.setText("Bitcoins: " + score)
+	}
+	removeFromArray(obj) {
+		var index = this.mobs.indexOf(obj);
+		if (index > -1) {
+			this.mobs.splice(index, 1);
+		}
+	}
+}
+// EnemyBullet and PlayerBullet will both be added to the BulletHandler 
+class EnemyBullet {
+	constructor(posX, posY) { 
+		this.sprite = game.add.sprite(posX, posY, 'enemy_meme');
+		this.sprite.lifespan = 10000; // 5 seconds then remove it
+	}
+	update(deltaTime) {
+		this.sprite.y += 0.5*deltaTime;
+	}
+	
+}
+class PlayerBullet {
+	constructor(posX, posY) {
+		this.sprite = game.add.sprite(posX, posY, 'player_laser');
+		this.sprite.lifespan = 15000;
+	}
+	update(deltaTime) {
+		this.sprite.y -= 1*deltaTime;
+	}
+	getSprite() {
+		return this.sprite;
+	}
+	destroy() {
+		this.sprite.destroy();
+	}
+}
+class BulletHandler {
+	constructor() {
+		this.playerBullets = [];
+		this.enemyBullets = [];
+	}
+	update(deltaTime) {
+		
+		/* PlayerBullet collision with Enemies */
+		for (var i = 0; i < this.playerBullets.length; i++) {
+			this.playerBullets[i].update(deltaTime);
+
+			for (var j = 0; j < lc.returnMobsArray().length; j++) {
+				if (typeof this.playerBullets[i] == "undefined") this.playerBullets[i] = new PlayerBullet(-100, 0);
+				if (Phaser.Rectangle.intersects(this.playerBullets[i].sprite.getBounds(), lc.returnMobsArray()[j].sprite.getBounds())) {
+					this.playerBullets[i].destroy();
+					this.removeFromPlayerBullets(this.playerBullets[i]);
+					lc.returnMobsArray()[j].damage(20, lc.returnMobsArray()[j]);
+				}
+			}
+		}
+		/* EnemyBullet collision with Player */
+		for (var i = 0; i < this.enemyBullets.length; i++) {
+			// if (typeof this.enemyBullets[i] == "undefined") this.enemyBullets[i] = new EnemyBullet(-100, 0);
+			this.enemyBullets[i].update(deltaTime);
+			if (Phaser.Rectangle.intersects(this.enemyBullets[i].sprite.getBounds(), player.getSprite().getBounds())) {
+				this.enemyBullets[i].sprite.destroy();
+				this.removeFromEnemyBullets(this.enemyBullets[i]);
+				player.damage(7);
+			}
+		}
+	}
+	addPlayerBullet(bullet) {
+		this.playerBullets.push(bullet);
+	}
+	addEnemyBullet(bullet) {
+		this.enemyBullets.push(bullet);
+	}
+	removeFromPlayerBullets(obj) {
+		var index = this.playerBullets.indexOf(obj);
+		if (index > -1) {
+			this.playerBullets.splice(index, 1);
+		}
+	}
+	removeFromEnemyBullets(obj) {
+		var index = this.enemyBullets.indexOf(obj);
+		if (index > -1) {
+			this.enemyBullets.splice(index, 1);
+		}
+	}
+}
+class Enemy {
+	constructor(posX, posY, hp, variation, id) {
+		this.hp = hp;
+		this.variation = variation;
+		this.sprite = game.add.sprite(posX, posY, variation);	// x, y, 'ufo' or 'ayy'
+		this.sprite.tint = Math.random() * 0xffffff;
+		this.movingLeft = false;
+		this.id = id;
+		mobCount++;
+		grossMobCount++;
+	}
+	update(deltaTime) {
+		if (!this.movingLeft) this.sprite.x--; else this.sprite.x++;
+		if (this.sprite.x < 0) this.movingLeft = true;
+		if (this.sprite.x > 548) this.movingLeft = false;
+	}
+	shoot() {
+		// console.log("Enemy [id " + this.id + "] fired.");
+		bh.addEnemyBullet(new EnemyBullet(this.sprite.x, this.sprite.y));
+	}
+	damage(hp, obj) {
+		game.sound.play('hitmarker', 0.1, false);
+		this.hp -= hp;
+		if (this.hp <= 0) this.die(obj);
+	}
+	die(obj) {
+		game.sound.play('explosion', 0.06, false);
+		this.sprite.destroy();
+		lc.removeFromArray(obj);
+		mobCount--;
+		score++;
+		lc.drawScore();
 	}
 }
 var player;
-var handler;
+var lc;
+var bh;
 MainGame.prototype = {
     create: function () {
 		var backdrop = game.add.sprite(0, 0, 'scene_backdrop');
 		player = new Player(0, 0);
+		lc = new LevelCreator();
+		bh = new BulletHandler();
     },
-    
     update: function () {
 		player.update(game.time.elapsed);
+		lc.update(game.time.elapsed);
+		bh.update(game.time.elapsed);
     }
 };

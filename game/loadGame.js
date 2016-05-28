@@ -10,7 +10,8 @@ LoadGame.prototype = {
 	
 	// Add audio assets
     loadAudio: function () {
-        
+        game.load.audio('hitmarker', 'js/game/assets/sounds/sound_hitmarker.wav', true);
+        game.load.audio('explosion', 'js/game/assets/sounds/sound_explosion.wav', true);
     },
     
 	// Load various image, atlas resources 
@@ -18,6 +19,7 @@ LoadGame.prototype = {
 		game.load.image('scene_backdrop', 'js/game/assets/ui/space_background.png');
 		game.load.image('player_sprite', 'js/game/assets/actors/player_ship.png');
 		game.load.image('player_laser', 'js/game/assets/entities/laser.png');
+		game.load.image('enemy_meme', 'js/game/assets/entities/dankmeme.png');
 		game.load.image('ufo', 'js/game/assets/actors/alien_ufo.png');
 		game.load.image('ayy', 'js/game/assets/actors/alien_ayy.png');
     },
