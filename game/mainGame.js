@@ -18,7 +18,11 @@ class Player {
 		this.y = (800-100) - posY;	// dont you love magic constants? its window height minus sprite height minus specified Y pos
 		this.sprite = game.add.sprite(this.x, this.y, 'player_sprite');
 		this.space = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+		this.wKey = game.input.keyboard.addKey(Phaser.Keyboard.W);
 		this.space.onDown.add(v => {
+			this.fire();
+		}, this);
+		this.wKey.onDown.add(v => {
 			this.fire();
 		}, this);
 		this.damageToGive = 20;	// increased with upgrades
@@ -29,7 +33,7 @@ class Player {
 		if (this.sprite.x < 0) this.sprite.x = 1;
 		else if (this.sprite.x > 538) this.sprite.x = 537;
 		
-		var speed = 0.25 * deltaTime;
+		var speed = 0.4 * deltaTime;
 		
 		// if-elif here so they cant use A and D simultaneously
 		if (game.input.keyboard.isDown(Phaser.Keyboard.A)) {
@@ -90,7 +94,7 @@ class LevelCreator {
 		} else {
 			variation = 'ayy';
 		}
-		for (var i = 0; i < numToSpawn / 2; i++) this.mobs.push(new Enemy(Math.floor(Math.random() * 537), Math.floor(Math.random() * 200), 100, variation, grossMobCount, Math.random() * (2 - 0.25) + 0.25));
+		for (var i = 0; i < numToSpawn / 2; i++) this.mobs.push(new Enemy(Math.floor(Math.random() * 537), Math.floor(Math.random() * 200), 50, variation, grossMobCount, Math.random() * (2 - 0.25) + 0.25));
 		var opposite = variation == 'ayy' ? 'ufo' : 'ayy';
 		for (var i = numToSpawn / 2; i < numToSpawn; i++) this.mobs.push(new Enemy(Math.floor(Math.random() * 537), Math.floor(Math.random() * 200), 100, opposite, grossMobCount, Math.random() * (2 - 0.25) + 0.25));
 		this.firstSpawn = false;
@@ -100,7 +104,7 @@ class LevelCreator {
 			level++;
 			this.spawnMobs();
 		}
-		if (game.time.now - this.lastTime > Math.floor(Math.random() * 10000 || this.lastTime == 0)) {
+		if (game.time.now - this.lastTime > Math.floor(Math.random() * 25000 || this.lastTime == 0)) {
 			if (this.mobs.length > 0) this.mobs[Math.floor(Math.random() * (this.mobs.length))].shoot();
 			this.lastTime = game.time.now;
 		}
@@ -218,9 +222,15 @@ class Enemy {
 		grossMobCount++;
 	}
 	update(deltaTime) {
-		if (!this.movingLeft) this.sprite.x--; else this.sprite.x++;
+		/*if (!this.movingLeft) this.sprite.x--; else this.sprite.x++;
 		if (this.sprite.x < 0) this.movingLeft = true;
-		if (this.sprite.x > 548) this.movingLeft = false;
+		if (this.sprite.x > 548) this.movingLeft = false;*/
+		var speed = 0.03;
+		if (this.sprite.x < player.sprite.x) this.sprite.x+=speed*deltaTime;
+		else this.sprite.x-=speed*deltaTime;
+		
+		if(this.sprite.y < player.sprite.y) this.sprite.y+=speed*deltaTime;
+		else this.sprite.y-=speed*deltaTime;
 	}
 	shoot() {
 		// console.log("Enemy [id " + this.id + "] fired.");
