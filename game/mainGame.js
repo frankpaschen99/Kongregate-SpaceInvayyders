@@ -32,9 +32,9 @@ class Player {
 		// window borders for sprite
 		if (this.sprite.x < 0) this.sprite.x = 1;
 		else if (this.sprite.x > 538) this.sprite.x = 537;
-		
+
 		var speed = 0.4 * deltaTime;
-		
+
 		// if-elif here so they cant use A and D simultaneously
 		if (game.input.keyboard.isDown(Phaser.Keyboard.A)) {
 			this.sprite.x -= speed;
@@ -112,7 +112,7 @@ class LevelCreator {
 			this.asteroids.push(new Asteroid(Math.floor(Math.random() * 537)));
 			this.lastTimeAsteroids = game.time.now;
 		}
-		
+
 		for (var i = 0; i < this.mobs.length; i++) this.mobs[i].update(deltaTime);
 		for (var i = 0; i < this.asteroids.length; i++) this.asteroids[i].update(deltaTime);
 	}
@@ -120,7 +120,7 @@ class LevelCreator {
 		return this.mobs;
 	}
 	drawScore() {
-		
+
 		this.text.setText("Bitcoins: " + score)
 	}
 	removeFromArray(obj) {
@@ -130,9 +130,9 @@ class LevelCreator {
 		}
 	}
 }
-// EnemyBullet and PlayerBullet will both be added to the BulletHandler 
+// EnemyBullet and PlayerBullet will both be added to the BulletHandler
 class EnemyBullet {
-	constructor(posX, posY, scale) { 
+	constructor(posX, posY, scale) {
 		this.sprite = game.add.sprite(posX, posY, 'enemy_meme');
 		this.sprite.lifespan = 10000; // 5 seconds then remove it
 		this.sprite.scale.setTo(scale, scale);
@@ -141,7 +141,7 @@ class EnemyBullet {
 		this.sprite.y += 0.5*deltaTime;
 		this.sprite.tint = Math.random() * 0xffffff;
 	}
-	
+
 }
 class PlayerBullet {
 	constructor(posX, posY) {
@@ -164,7 +164,7 @@ class BulletHandler {
 		this.enemyBullets = [];
 	}
 	update(deltaTime) {
-		
+
 		/* PlayerBullet collision with Enemies */
 		for (var i = 0; i < this.playerBullets.length; i++) {
 			this.playerBullets[i].update(deltaTime);
@@ -222,15 +222,16 @@ class Enemy {
 		grossMobCount++;
 	}
 	update(deltaTime) {
-		/*if (!this.movingLeft) this.sprite.x--; else this.sprite.x++;
+		if (!this.movingLeft) this.sprite.x--; else this.sprite.x++;
 		if (this.sprite.x < 0) this.movingLeft = true;
-		if (this.sprite.x > 548) this.movingLeft = false;*/
-		var speed = 0.03;
+		if (this.sprite.x > 548) this.movingLeft = false;
+
+		/*var speed = 0.03;
 		if (this.sprite.x < player.sprite.x) this.sprite.x+=speed*deltaTime;
 		else this.sprite.x-=speed*deltaTime;
-		
+
 		if(this.sprite.y < player.sprite.y) this.sprite.y+=speed*deltaTime;
-		else this.sprite.y-=speed*deltaTime;
+		else this.sprite.y-=speed*deltaTime;*/
 	}
 	shoot() {
 		// console.log("Enemy [id " + this.id + "] fired.");
