@@ -27,6 +27,8 @@ class Player {
 		}, this);
 		this.damageToGive = 20;	// increased with upgrades
 		this.upgradeLevel = 1;
+		this.timeLastFired = 0;
+		this.frozen = false;
 	}
 	update(deltaTime) {
 		// window borders for sprite
@@ -36,19 +38,31 @@ class Player {
 		var speed = 0.4 * deltaTime;
 
 		// if-elif here so they cant use A and D simultaneously
-		if (game.input.keyboard.isDown(Phaser.Keyboard.A)) {
-			this.sprite.x -= speed;
-		} else if (game.input.keyboard.isDown(Phaser.Keyboard.D)) {
-			this.sprite.x += speed;
+		if (game.input.keyboard.isDown(Phaser.Keyboard.A) && !this.frozen) {
+			this.moveLeft(speed);
+		} else if (game.input.keyboard.isDown(Phaser.Keyboard.D) && !this.frozen) {
+			this.moveRight(speed);
 		}
 		if (memePoints >= memePointsNeeded) {
 			this.upgrade();
 		}
 	}
+	moveLeft(speed) {
+		this.sprite.x -= speed;
+	}
+	moveRight(speed) {
+		this.sprite.x += speed;
+	}
 	fire(deltaTime)  {
-		bh.addPlayerBullet(new PlayerBullet(this.sprite.x, this.sprite.y));
+		// fix firing too fast
+		if (this.frozen) return;
+		
+		if (game.time.now - this.timeLastFired >= 50)
+			bh.addPlayerBullet(new PlayerBullet(this.sprite.x, this.sprite.y));
+		this.timeLastFired = game.time.now;
 	}
 	damage(amount) {
+		if (this.frozen) return;
 		game.sound.play('hitmarker', 0.1, false);
 		this.hp -= amount;
 		if (this.hp <= 0) this.die();
@@ -57,7 +71,11 @@ class Player {
 		// Game over
 		game.sound.play('sad', 0.06, true);
 		console.log("Game over!");
-		this.sprite.destroy();
+		this.freeze();
+		//this.sprite.destroy();
+	}
+	freeze() {
+		this.frozen = true;	// cold never bothered me anyway
 	}
 	getSprite() {
 		return this.sprite;
@@ -260,20 +278,50 @@ class Asteroid {
 		// this.sprite.y += 0.2*deltaTime;
 	}
 }
+/** ai for SpaceInvayydersJS implemented 2-25-17 by frank **/
+class SimpleAI {
+	constructor(player) {
+		this.player = player;
+		this.movingLeft = true;
+	}
+	// perform intelligent logic
+	update(deltaTime) {
+		if (this.player.frozen) return;
+		
+		/** MOVEMENT LEFT AND RIGHT **/
+		if (this.player.sprite.position.x == 1) {
+			this.movingLeft = false;
+		} else if (this.player.sprite.position.x == 537) {
+			this.movingLeft = true;
+		}
+		this.movingLeft ? this.player.moveLeft(0.2*deltaTime) : this.player.moveRight(0.2 * deltaTime);
+		
+		/** DECIDING TO SHOOT **/
+		lc.mobs.forEach(function (index) {
+			if ((index.sprite.position.x > this.player.sprite.position.x - 10) && (index.sprite.position.x < this.player.sprite.position.x + 10)) {
+				this.player.fire(deltaTime);
+			}
+		}.bind(this));
+	}
+}
 var player;
 var lc;
 var bh;
+var ai;
 MainGame.prototype = {
     create: function () {
 		var backdrop = game.add.sprite(0, 0, 'scene_backdrop');
 		lc = new LevelCreator();
-		player = new Player(0, 0);
+		player = new Player(50, 0);
 		bh = new BulletHandler();
 		this.lastTime = 0;
+		
+		ai = new SimpleAI(player);
     },
     update: function () {
 		player.update(game.time.elapsed);
 		lc.update(game.time.elapsed);
 		bh.update(game.time.elapsed);
+		ai.update(game.time.elapsed);
     }
 };

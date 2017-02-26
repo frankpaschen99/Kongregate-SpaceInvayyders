@@ -42,6 +42,7 @@ LoadGame.prototype = {
         this.loadImages();
         this.loadFonts();
         this.loadAudio();
+		this.addGameMusic();
     },
     
 	// Add all the game states
@@ -53,11 +54,11 @@ LoadGame.prototype = {
 	// Start playing music
     addGameMusic: function () {
         game.load.audio('sad', 'js/game/assets/music/sadviolin.mp3', true);
+
     },
 	// Finally, create is called  
     create: function () {
         this.addGameStates();
-        this.addGameMusic();
 		game.state.start('MainGame');
     }
 };
