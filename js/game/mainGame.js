@@ -1,8 +1,4 @@
-/* I'd like to preface this file by saying I DO NOT KNOW JAVASCRIPT and I lack even a basic understanding of
-prototype-oriented languages. Thank fuck for this new ES6 syntax or I'd be screwed. So if you're some random
-person looking at this cancer, please don't judge me. */
-
-// todo: asteroids, upgrades, health bars, meme bar,
+/* I would just like program historians 100 years into the future to know... this is what code looks like when its written at 4am in a foreign programming language */
 
 var mobCount = 0;
 var grossMobCount = 0;
@@ -29,14 +25,18 @@ class Player {
 		this.upgradeLevel = 1;
 		this.timeLastFired = 0;
 		this.frozen = false;
+		this.AI_ACTIVE = false;
 	}
 	update(deltaTime) {
+		
 		// window borders for sprite
 		if (this.sprite.x < 0) this.sprite.x = 1;
 		else if (this.sprite.x > 538) this.sprite.x = 537;
 
 		var speed = 0.4 * deltaTime;
-
+		
+		if (this.AI_ACTIVE) return;
+		
 		// if-elif here so they cant use A and D simultaneously
 		if (game.input.keyboard.isDown(Phaser.Keyboard.A) && !this.frozen) {
 			this.moveLeft(speed);
@@ -154,8 +154,10 @@ class EnemyBullet {
 		this.sprite = game.add.sprite(posX, posY, 'enemy_meme');
 		this.sprite.lifespan = 10000; // 5 seconds then remove it
 		this.sprite.scale.setTo(scale, scale);
+		this.lastTime = 0;
 	}
 	update(deltaTime) {
+		this.lastTime = game.time.now;
 		this.sprite.y += 0.5*deltaTime;
 		this.sprite.tint = Math.random() * 0xffffff;
 	}
@@ -182,7 +184,6 @@ class BulletHandler {
 		this.enemyBullets = [];
 	}
 	update(deltaTime) {
-
 		/* PlayerBullet collision with Enemies */
 		for (var i = 0; i < this.playerBullets.length; i++) {
 			this.playerBullets[i].update(deltaTime);
@@ -283,9 +284,19 @@ class SimpleAI {
 	constructor(player) {
 		this.player = player;
 		this.movingLeft = true;
+		this.direction = 1;	// RIGHT = 1, LEFT = 0
+		this.lastX = this.player.sprite.position.x;
 	}
 	// perform intelligent logic
 	update(deltaTime) {
+		
+		if ((this.lastX - this.player.sprite.position.x) < 0)
+			this.direction = 1;
+		else
+			this.direction = 0;
+		this.lastX = this.player.sprite.position.x;
+		
+		this.player.AI_ACTIVE = true;
 		if (this.player.frozen) return;
 		
 		/** MOVEMENT LEFT AND RIGHT **/
@@ -295,6 +306,22 @@ class SimpleAI {
 			this.movingLeft = true;
 		}
 		this.movingLeft ? this.player.moveLeft(0.2*deltaTime) : this.player.moveRight(0.2 * deltaTime);
+		
+		
+		// TODO: Never fix this
+		/**bh.enemyBullets.forEach(function(index) {
+			// Danger is on the left side
+			if ((this.player.sprite.position.x - index.sprite.position.x > 0) && (Math.abs(index.sprite.position.x - this.player.sprite.position.x) < 80)) {
+				
+				console.log("MOVE RIGHT A BIT");
+				
+			} else if ((this.player.sprite.position.x - index.sprite.position.x < 0) && (Math.abs(index.sprite.position.x - this.player.sprite.position.x) < 100)) {		// DANGER ON RIGHT SIDE
+			
+				console.log("MOVE LEFT A BIT");
+				
+			}
+		}.bind(this));**/
+		
 		
 		/** DECIDING TO SHOOT **/
 		lc.mobs.forEach(function (index) {
@@ -312,7 +339,7 @@ MainGame.prototype = {
     create: function () {
 		var backdrop = game.add.sprite(0, 0, 'scene_backdrop');
 		lc = new LevelCreator();
-		player = new Player(50, 0);
+		player = new Player(500, 0);
 		bh = new BulletHandler();
 		this.lastTime = 0;
 		
